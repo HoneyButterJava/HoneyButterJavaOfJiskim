@@ -2,8 +2,8 @@ name: do_algorithm!
 
 on:
   schedule:
-    #- cron: "0 0 * * *"
-    - cron: "*/5 * * * *"
+    - cron: "0 15 * * *"
+    #- cron: "*/5 * * * *"
 
 jobs:
   create_issue:
@@ -14,7 +14,7 @@ jobs:
       - name: Get today's date
         id: date
         run: |
-          echo "::set-output name=today::$(date "+%Y/%m/%d")"
+          echo "::save-state name=today::$(TZ=Asia/Seoul date "+%Y/%m/%d")"
       - name: Create issue for Algorithm problem solving
         uses: imjohnbo/issue-bot@3daae12aa54d38685d7ff8459fc8a2aee8cea98b
         with:
@@ -25,7 +25,6 @@ jobs:
               - 완전탐색
             ## 문제 링크
               - https://school.programmers.co.kr/learn/courses/30/parts/12230
-
           pinned: false
           close-previous: false
         env:
