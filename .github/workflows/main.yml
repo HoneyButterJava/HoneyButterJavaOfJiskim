@@ -2,7 +2,7 @@ name: do_algorithm!
 
 on:
   schedule:
-    #- cron: "0 15 * * *"
+    #- cron: "0 0 * * *"
     - cron: "*/5 * * * *"
 
 jobs:
@@ -15,15 +15,16 @@ jobs:
         id: date
         run: |
           echo "::set-output name=today::$(date "+%Y/%m/%d")"
-      - name: Create team sync issue
+      - name: Create issue for Algorithm problem solving
         uses: imjohnbo/issue-bot@3daae12aa54d38685d7ff8459fc8a2aee8cea98b
         with:
           assignees: "jis-kim"
-          title: "${{ steps.date.outputs.today }}"
+          title: "[${{ steps.date.outputs.today }}] 주제 : 문제"
           body: |
             ## 주제
-
+              - 완전탐색
             ## 문제 링크
+              - https://school.programmers.co.kr/learn/courses/30/parts/12230
 
           pinned: false
           close-previous: false
