@@ -2,23 +2,31 @@ name: do_algorithm!
 
 on:
   schedule:
-    - cron: "15 0 * * *"
+    #- cron: "0 15 * * *"
+    - cron: "*/5 * * * *"
 
 jobs:
   create_issue:
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - name: Get today's date
         id: date
         run: |
           echo "::set-output name=today::$(date "+%Y/%m/%d")"
-
-      - name: Create an issue
-        uses: actions-ecosystem/action-create-issue@v1
+    steps:
+      - name: Create team sync issue
+        uses: imjohnbo/issue-bot@3daae12aa54d38685d7ff8459fc8a2aee8cea98b
         with:
-          github_token: ${{ secrets.github_token }}
-          title: ${{ steps.date.outputs.today }}
+          assignees: "jis-kim"
+          title: "${{ steps.date.outputs.today }}"
           body: |
-            ## This week's TODO
-            - [ ] Have a meeting with UX team
-            - [ ] Check the dashboard
+            ## 주제
+
+            ## 문제 링크
+
+          pinned: false
+          close-previous: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
