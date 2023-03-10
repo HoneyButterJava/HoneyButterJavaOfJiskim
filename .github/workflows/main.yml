@@ -3,7 +3,7 @@ name: do_algorithm!
 on:
   schedule:
     - cron: "0 15 * * *"
-    #- cron: "*/5 * * * *"
+    #- cron: "* * * * *"
 
 jobs:
   create_issue:
@@ -14,18 +14,64 @@ jobs:
       - name: Get today's date
         id: date
         run: |
-          echo "::save-state name=today::$(TZ=Asia/Seoul date "+%Y/%m/%d")"
-      - name: Create issue for Algorithm problem solving
-        uses: imjohnbo/issue-bot@3daae12aa54d38685d7ff8459fc8a2aee8cea98b
+          echo "DATE=$(TZ=Asia/Seoul date "+%Y/%m/%d")" >> $GITHUB_ENV
+
+      - name : Generate token
+        id : generate_token
+        uses: tibdex/github-app-token@36464acb844fc53b9b8b2401da68844f6b05ebb0
         with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PEM }}
+
+      - name: Get project data
+         env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          ORGANIZATION: HoneyButterJava
+          PROJECT_NUMBER: 2
+        run: |
+          gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org){
+                projectV2(number: $number) {
+                  id
+                  fields(first:5) {
+                    nodes {
+                      ... on ProjectV2Field {
+                        id
+                        name
+                      }
+                      ... on ProjectV2SingleSelectField {
+                        id
+                        name
+                        options {
+                          id
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f org=$ORGANIZATION -F number=$PROJECT_NUMBER > project_data.json
+
+          echo 'PROJECT_ID='$(jq '.data.organization.projectV2.id' project_data.json) >> $GITHUB_ENV
+          echo 'DATE_FIELD_ID='$(jq '.data.organization.projectV2.fields.nodes[] | select(.name== "Date posted") | .id' project_data.json) >> $GITHUB_ENV
+          echo 'STATUS_FIELD_ID='$(jq '.data.organization.projectV2.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
+          echo 'TODO_OPTION_ID='$(jq '.data.organization.projectV2.fields.nodes[] | select(.name== "Status") | .options[] | select(.name=="Todo") |.id' project_data.json) >> $GITHUB_ENV
+
+      - name: Create issue for Algorithm problem solving
+        uses: imjohnbo/issue-bot@v3
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
           assignees: "jis-kim"
-          title: "[${{ steps.date.outputs.today }}] 주제 : 문제"
+          title: "[주제] 문제"
           body: |
             ## 주제
               - 완전탐색
             ## 문제 링크
               - https://school.programmers.co.kr/learn/courses/30/parts/12230
+          project-type: "organization"
+          project: 2
+          column: "In progress"
           pinned: false
           close-previous: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
