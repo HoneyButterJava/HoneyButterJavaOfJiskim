@@ -2,7 +2,7 @@ name: do_algorithm!
 
 on:
   schedule:
-    - cron: "0 15 * * *"
+    - cron: "0 15 * * 1-5"
     #- cron: "*/5 * * * *"
 
 jobs:
@@ -11,16 +11,23 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-      - name: Get today's date
+      - name : Generate token
+        id : generate_token
+        uses: tibdex/github-app-token@36464acb844fc53b9b8b2401da68844f6b05ebb0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PEM }}
+      - name: Get today date
         id: date
         run: |
-          echo "::save-state name=today::$(TZ=Asia/Seoul date "+%Y/%m/%d")"
+          echo "DATE=$(TZ=Asia/Seoul date "+%Y/%m/%d") >> $GITHUB_ENV"
       - name: Create issue for Algorithm problem solving
-        uses: imjohnbo/issue-bot@3daae12aa54d38685d7ff8459fc8a2aee8cea98b
+        uses: imjohnbo/issue-bot@v3
         with:
           assignees: "jis-kim"
-          title: "[${{ steps.date.outputs.today }}] 주제 : 문제"
+          title: "[주제] 문제"
           body: |
+            # ${{ env.DATE }} 
             ## 주제
               - 완전탐색
             ## 문제 링크
@@ -28,4 +35,4 @@ jobs:
           pinned: false
           close-previous: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
