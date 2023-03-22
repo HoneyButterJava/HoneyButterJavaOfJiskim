@@ -2,8 +2,7 @@ name: do_algorithm!
 
 on:
   schedule:
-    - cron: "0 15 * * 0-4"
-    #- cron: "*/5 * * * *"
+    # - cron: "0 15 * * 0-4"
 
 jobs:
   create_issue:
